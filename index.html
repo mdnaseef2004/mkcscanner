@@ -1,555 +1,318 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Markaz Knowledge City</title>
-  <meta name="description" content="Markaz Knowledge City - Find us on Instagram, YouTube, Facebook and the Web." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="icon" href="https://markazknowledgecity.com/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#1e5e38" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <title>Markaz Knowledge City — Smart Visitor Guide</title>
+  <meta name="description" content="Welcome to Markaz Knowledge City, Calicut. Explore our campus map, download event posters, create social media stories, and rate your visit." />
+  <meta name="keywords" content="Markaz Knowledge City, Calicut, Kerala, Islamic education, campus map, visitor guide" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Markaz Knowledge City Smart Visitor Guide" />
+  <meta property="og:description" content="Explore Markaz Knowledge City campus, navigate facilities, and share your visit." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="assets/logo/markaz_logo.png" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
+
+  <!-- Premium Icons (Lucide) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
   <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/main.css" />
+
+  <!-- Map search dropdown styles (inline for simplicity) -->
   <style>
-    /* ===== Reset & Base ===== */
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-size: 16px; }
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #f0f0f0;
-      min-height: 100vh;
+    #map-search-results {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border-radius: var(--border-radius-md);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-color);
+      max-height: 240px;
+      overflow-y: auto;
+      z-index: 600;
+    }
+
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: background var(--transition-fast);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover { background: var(--bg-secondary); }
+    .result-icon { font-size: 20px; flex-shrink: 0; }
+    .result-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .result-desc { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+    /* Map popup override */
+    .leaflet-popup-content-wrapper {
+      border-radius: 14px !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2) !important;
+    }
+    .leaflet-popup-content { margin: 0 !important; padding: 0 !important; }
+    .leaflet-popup-tip { background: white !important; }
+
+    /* Story canvas wrapper */
+    .story-wrapper {
       display: flex;
       flex-direction: column;
       align-items: center;
+      gap: 16px;
     }
 
-    /* ===== Intro Overlay ===== */
-    #intro-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: #ffffff;
-      z-index: 9999;
-      display: flex;
+    /* Thank you state */
+    #thankyou-panel {
+      display: none;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      animation: slideOutUp 0.8s cubic-bezier(0.8, 0, 0.2, 1) 2.2s forwards;
-    }
-
-    .intro-logo {
-      width: 320px;
-      max-width: 80%;
-      opacity: 0;
-      transform: scale(0.9);
-      animation: logoFadeInScale 1.2s ease-out 0.2s forwards;
-    }
-
-    @keyframes logoFadeInScale {
-      0% { opacity: 0; transform: scale(0.9); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-
-    @keyframes slideOutUp {
-      0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-100%); opacity: 0; visibility: hidden; }
-    }
-
-    /* ===== Header Banner ===== */
-    .header-banner {
-      width: 100%;
-      height: 180px;
-      background: #6e1116;
-      position: relative;
-      flex-shrink: 0;
-    }
-
-    /* ===== Card ===== */
-    .card-wrapper {
-      width: 100%;
-      max-width: 520px;
-      padding: 0 16px;
-      margin-top: -52px;
-      position: relative;
-      z-index: 10;
-      flex: 1;
-    }
-
-    .card {
-      background: #ffffff;
-      border-radius: 18px;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
-      padding: 60px 28px 36px;
-      position: relative;
-    }
-
-    /* ===== Logo ===== */
-    .logo-container {
-      width: 96px;
-      height: 96px;
-      border-radius: 50%;
-      background: #fff;
-      border: 4px solid #fff;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-      position: absolute;
-      top: -48px;
-      left: 50%;
-      transform: translateX(-50%);
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      /* Entrance animation synced with overlay slide up */
-      animation: logoEntrance 1s cubic-bezier(0.22, 1, 0.36, 1) 2.4s forwards;
-      opacity: 0;
-    }
-
-    .logo-container img {
-      width: 85%;
-      height: 85%;
-      object-fit: contain;
-      object-position: center;
-    }
-
-    @keyframes logoEntrance {
-      0% {
-        opacity: 0;
-        transform: translateX(-50%) translateY(20px) scale(0.8);
-      }
-      100% {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0) scale(1);
-      }
-    }
-
-    /* ===== Title / Subtitle ===== */
-    .profile-info {
       text-align: center;
-      margin-bottom: 20px;
-      animation: fadeUp 0.8s ease 2.6s forwards;
-      opacity: 0;
+      padding: 40px 24px;
+      gap: 16px;
+      animation: bounceIn 0.5s ease both;
     }
 
-    .profile-name {
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: #1a1a1a;
-      margin-bottom: 6px;
+    .thankyou-emoji {
+      font-size: 72px;
+      animation: heartBeat 1.5s ease infinite;
     }
 
-    .profile-location {
-      font-size: 0.85rem;
-      color: #888;
-      font-weight: 400;
-    }
-
-    .divider {
-      width: 100%;
-      height: 1px;
-      background: #e8e8e8;
-      margin: 18px 0;
-      animation: fadeUp 0.8s ease 2.7s forwards;
-      opacity: 0;
-    }
-
-    /* ===== Section Title ===== */
-    .section-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 16px;
-      animation: fadeUp 0.8s ease 2.8s forwards;
-      opacity: 0;
-    }
-
-    /* ===== Links List ===== */
-    .links-list {
-      list-style: none;
-    }
-
-    .links-list li {
-      opacity: 0;
-      animation: fadeUp 0.6s ease forwards;
-    }
-    .links-list li:nth-child(1) { animation-delay: 2.9s; }
-    .links-list li:nth-child(2) { animation-delay: 3.0s; }
-    .links-list li:nth-child(3) { animation-delay: 3.1s; }
-    .links-list li:nth-child(4) { animation-delay: 3.2s; }
-
-    .link-item {
+    /* Lang selector */
+    .lang-selector {
       display: flex;
-      align-items: center;
-      padding: 14px 4px;
-      border-bottom: 1px solid #f2f2f2;
-      text-decoration: none;
-      color: inherit;
-      transition: background 0.25s ease, transform 0.25s ease;
-      border-radius: 12px;
+      gap: 4px;
+    }
+    .lang-btn {
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
       cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .lang-btn.active, .lang-btn:hover {
+      background: var(--brand-green-600);
+      color: white;
+      border-color: var(--brand-green-600);
     }
 
-    .link-item:hover {
-      background: #fafafa;
-      transform: translateX(4px);
+    /* Map tab section headers */
+    .map-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 12px 16px 4px;
     }
 
-    .link-item:active {
-      transform: scale(0.98);
-    }
-
-    .link-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
+    /* Poster upload hint */
+    .upload-hint-banner {
       display: flex;
       align-items: center;
-      justify-content: center;
-      margin-right: 14px;
-      flex-shrink: 0;
+      gap: 12px;
+      background: linear-gradient(90deg, rgba(212,148,10,0.1), rgba(212,148,10,0.05));
+      border: 1px solid var(--border-accent);
+      border-radius: var(--border-radius-md);
+      padding: 12px 14px;
+      margin: 0 16px 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
     }
 
-    .link-icon img,
-    .link-icon svg {
-      width: 28px;
-      height: 28px;
-    }
-
-    .link-text {
-      flex: 1;
-    }
-
-    .link-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #1a1a1a;
-    }
-
-    .link-subtitle {
-      font-size: 0.75rem;
-      color: #999;
-      margin-top: 2px;
-    }
-
-    .link-arrow {
-      color: #ccc;
-      font-size: 1.1rem;
-      margin-left: 8px;
-      transition: transform 0.25s ease, color 0.25s ease;
-    }
-
-    .link-item:hover .link-arrow {
-      color: #6e1116;
-      transform: translateX(4px);
-    }
-
-    /* ===== Fade Up Animation ===== */
-    @keyframes fadeUp {
-      0% {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* ===== Footer ===== */
-    .footer {
-      text-align: center;
-      padding: 28px 0 20px;
-      color: #bbb;
-      font-size: 0.72rem;
-      animation: fadeUp 1s ease 3.5s forwards;
-      opacity: 0;
-    }
-
-    /* ===== Responsive ===== */
-    @media (max-width: 480px) {
-      .header-banner { height: 150px; }
-      .card { padding: 56px 20px 28px; }
-      .profile-name { font-size: 1.2rem; }
-    }
-
-    /* ===== Embedded Map ===== */
-    .map-wrapper {
+    /* Story controls */
+    .story-controls {
       width: 100%;
-      height: 380px;
-      border-radius: 16px;
-      overflow: hidden;
-      margin-bottom: 24px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-      position: relative;
-      animation: fadeUp 0.8s ease 2.7s forwards;
-      opacity: 0;
+      max-width: 360px;
     }
-    #map { width: 100%; height: 100%; z-index: 1; }
-    
-    .custom-marker {
-      width: 32px; height: 32px; border-radius: 50%; background: white;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem; border: 2px solid; cursor: pointer; transition: 0.2s;
-    }
-    .custom-marker:hover { transform: scale(1.15) translateY(-4px); z-index: 1000 !important; }
-    
-    .user-marker {
-      width: 18px; height: 18px; background: #3b82f6; border-radius: 50%;
-      border: 3px solid white; box-shadow: 0 0 0 rgba(59, 130, 246, 0.4); animation: pulse-blue 2s infinite;
-    }
-    @keyframes pulse-blue { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 12px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
 
-    .btn-location {
-      position: absolute; bottom: 16px; right: 16px; z-index: 1000;
-      width: 44px; height: 44px; background: white; border-radius: 50%;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.2s;
+    .input-group {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
     }
-    .btn-location:hover { background: #f0f0f0; transform: scale(1.05); }
 
-    .leaflet-routing-container { display: none !important; } /* Hide the default routing text box */
+    .text-input {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: var(--border-radius-md);
+      background: var(--bg-secondary);
+      border: 1.5px solid var(--border-color);
+      color: var(--text-primary);
+      font-size: 13px;
+      transition: all var(--transition-base);
+      resize: none;
+    }
+
+    .text-input:focus {
+      border-color: var(--brand-green-500);
+      box-shadow: 0 0 0 3px rgba(35,107,66,0.1);
+    }
+
+    /* Review stars row */
+    .stars-container {
+      text-align: center;
+      padding: 16px 0;
+    }
+
+    /* Rating pill */
+    .rating-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: linear-gradient(135deg, var(--brand-gold-600), var(--brand-gold-400));
+      border-radius: var(--border-radius-full);
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: var(--shadow-gold);
+    }
   </style>
 </head>
+
 <body>
-
-  <!-- Intro Overlay -->
-  <div id="intro-overlay">
-    <img
-      src="logo_color.svg"
-      alt="Markaz Knowledge City Intro Logo"
-      class="intro-logo"
-    />
+  <!-- Page Loader -->
+  <div id="page-loader" class="page-loader">
+    <img class="loader-logo" src="assets/logo/markaz_logo.png" alt="Markaz" onerror="this.style.display='none'" />
+    <div class="loader-ring"></div>
+    <p class="loader-text" data-i18n="app.loading">Loading Smart Visitor Guide...</p>
   </div>
 
-  <!-- Header Banner -->
-  <div class="header-banner"></div>
+  <!-- App Shell -->
+  <div id="app">
 
-  <!-- Card -->
-  <div class="card-wrapper">
-    <div class="card">
-
-      <!-- Logo with slow-motion entrance -->
-      <div class="logo-container" id="logo-container">
-        <img
-          src="logo_color.svg"
-          alt="Markaz Knowledge City Logo"
-          id="logo-img"
-        />
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-logo">
+        <img src="assets/logo/markaz_logo.png" alt="Markaz" onerror="this.style.display='none'" />
+        <div class="header-logo-text">
+          <span class="title" data-i18n="app.title">Markaz Knowledge City</span>
+          <span class="subtitle" data-i18n="app.subtitle">Smart Visitor Guide</span>
+        </div>
       </div>
-
-      <!-- Profile Info -->
-      <div class="profile-info">
-        <h1 class="profile-name">Markaz Knowledge City</h1>
-        <p class="profile-location">Calicut, Kerala, India</p>
+      <div class="header-actions">
+        <div class="lang-selector">
+          <button class="lang-btn active" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="ml">മ</button>
+          <button class="lang-btn" data-lang="ar">ع</button>
+        </div>
+        <button class="btn-icon" id="theme-toggle" title="Toggle Dark Mode" aria-label="Toggle theme">🌙</button>
       </div>
+    </header>
 
-      <!-- MAP SECTION -->
-      <div class="map-wrapper">
-        <div id="map"></div>
-        <button class="btn-location" id="btn-location" title="You Are Here">📍</button>
+    <!-- Location Banner -->
+    <div class="location-banner" role="status" aria-live="polite">
+      <span class="pulse-dot"></span>
+      <span class="loc-icon">📍</span>
+      <div>
+        <span class="loc-name" id="current-location-name">Main Entrance Gate</span>
+        <div class="loc-sub" id="current-location-sub">Markaz Knowledge City, Calicut</div>
       </div>
-
-      <div class="divider"></div>
-
-      <!-- Section Title -->
-      <p class="section-title">Find me on</p>
-
-      <!-- Social Links -->
-      <ul class="links-list">
-
-        <!-- Instagram -->
-        <li>
-          <a class="link-item" href="https://www.instagram.com/markaz.city/" target="_blank" rel="noopener noreferrer" id="link-instagram">
-            <div class="link-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <linearGradient id="ig-grad" x1="0" y1="24" x2="24" y2="0">
-                  <stop offset="0%" stop-color="#feda75"/>
-                  <stop offset="25%" stop-color="#fa7e1e"/>
-                  <stop offset="50%" stop-color="#d62976"/>
-                  <stop offset="75%" stop-color="#962fbf"/>
-                  <stop offset="100%" stop-color="#4f5bd5"/>
-                </linearGradient>
-                <rect x="2" y="2" width="20" height="20" rx="5" stroke="url(#ig-grad)" stroke-width="2"/>
-                <circle cx="12" cy="12" r="4.5" stroke="url(#ig-grad)" stroke-width="2"/>
-                <circle cx="17.5" cy="6.5" r="1.2" fill="url(#ig-grad)"/>
-              </svg>
-            </div>
-            <div class="link-text">
-              <div class="link-title">Instagram</div>
-              <div class="link-subtitle">markazcity</div>
-            </div>
-            <span class="link-arrow">→</span>
-          </a>
-        </li>
-
-        <!-- YouTube -->
-        <li>
-          <a class="link-item" href="https://www.youtube.com/MarkazCity" target="_blank" rel="noopener noreferrer" id="link-youtube">
-            <div class="link-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="2" y="4.5" width="20" height="15" rx="4" fill="#FF0000"/>
-                <polygon points="10,8.5 16,12 10,15.5" fill="#fff"/>
-              </svg>
-            </div>
-            <div class="link-text">
-              <div class="link-title">YouTube</div>
-              <div class="link-subtitle">Markaz Knowledge City</div>
-            </div>
-            <span class="link-arrow">→</span>
-          </a>
-        </li>
-
-        <!-- Facebook -->
-        <li>
-          <a class="link-item" href="https://www.facebook.com/markazcity/" target="_blank" rel="noopener noreferrer" id="link-facebook">
-            <div class="link-icon">
-              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <rect width="24" height="24" rx="5" fill="#1877F2"/>
-                <path d="M16.5 12.5h-2.5v8h-3v-8H9v-2.5h2v-1.8c0-2 1.2-3.2 3.1-3.2.9 0 1.9.2 1.9.2v2h-1.1c-1 0-1.4.6-1.4 1.3v1.5h2.5l-.5 2.5z" fill="#fff"/>
-              </svg>
-            </div>
-            <div class="link-text">
-              <div class="link-title">Facebook</div>
-              <div class="link-subtitle">Markaz Knowledge City</div>
-            </div>
-            <span class="link-arrow">→</span>
-          </a>
-        </li>
-
-        <!-- Website -->
-        <li>
-          <a class="link-item" href="https://markazknowledgecity.com" target="_blank" rel="noopener noreferrer" id="link-website">
-            <div class="link-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10" stroke="#555" stroke-width="1.8"/>
-                <ellipse cx="12" cy="12" rx="4.5" ry="10" stroke="#555" stroke-width="1.8"/>
-                <line x1="2" y1="12" x2="22" y2="12" stroke="#555" stroke-width="1.8"/>
-                <line x1="12" y1="2" x2="12" y2="22" stroke="#555" stroke-width="1.8"/>
-              </svg>
-            </div>
-            <div class="link-text">
-              <div class="link-title">Web</div>
-              <div class="link-subtitle">markazknowledgecity.com</div>
-            </div>
-            <span class="link-arrow">→</span>
-          </a>
-        </li>
-
-      </ul>
     </div>
 
-    <!-- Footer -->
-    <div class="footer">
-      &copy; 2025 Markaz Knowledge City. All rights reserved.
-    </div>
-  </div>
+    <!-- Tab Content -->
+    <main class="tab-content" id="tab-content">
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+      <!-- ════════════════════════════════════
+           TAB 1: MAP
+           ════════════════════════════════════ -->
+      <section class="tab-panel active" id="tab-map" role="tabpanel" aria-labelledby="nav-map">
+        <!-- Map Search Bar -->
+        <div id="map-container">
+          <div class="map-search-bar">
+            <i data-lucide="search" class="map-search-icon"></i>
+            <input
+              type="text"
+              id="map-search"
+              class="map-search-input"
+              placeholder="Search buildings, facilities..."
+              data-i18n="map.search_placeholder"
+              data-i18n-attr="placeholder"
+              autocomplete="off"
+              aria-label="Search campus locations"
+            />
+            <div id="map-search-results"></div>
+          </div>
+
+          <!-- Leaflet Map -->
+          <div id="leaflet-map" aria-label="Campus Map"></div>
+
+          <!-- Map Controls -->
+          <div class="map-controls">
+            <button class="map-ctrl-btn" onclick="window.CampusMap.recenter()" title="My Location" aria-label="Re-center to my location">
+              <i data-lucide="navigation"></i>
+            </button>
+            <button class="map-ctrl-btn" onclick="window.CampusMap.map?.zoomIn()" title="Zoom in" aria-label="Zoom in">
+              <i data-lucide="plus"></i>
+            </button>
+            <button class="map-ctrl-btn" onclick="window.CampusMap.map?.zoomOut()" title="Zoom out" aria-label="Zoom out">
+              <i data-lucide="minus"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Nearby Locations -->
+        <div class="map-section-title" data-i18n="map.nearby">Nearby Locations</div>
+        <div class="info-card-row" id="nearby-locations" role="list" aria-label="Nearby campus locations">
+          <!-- Populated by map.js -->
+          <div class="skeleton" style="width:130px; height:110px; border-radius:14px; flex-shrink:0;"></div>
+          <div class="skeleton" style="width:130px; height:110px; border-radius:14px; flex-shrink:0;"></div>
+          <div class="skeleton" style="width:130px; height:110px; border-radius:14px; flex-shrink:0;"></div>
+        </div>
+      </section>
+
+    </main>
+
+  </div><!-- /#app -->
+
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite" role="status"></div>
+
+  <!-- Scripts -->
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Supabase JS (optional — load only if credentials are set) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <!-- App Modules (order matters) -->
+  <script src="js/analytics.js"></script>
+  <script src="js/qr-router.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- Service Worker Registration -->
   <script>
-    const mkcCenter = [11.47227, 76.00752];
-    const southWest = L.latLng(11.455, 75.985);
-    const northEast = L.latLng(11.490, 76.025);
-    const bounds = L.latLngBounds(southWest, northEast);
-
-    const map = L.map('map', {
-      center: mkcCenter,
-      zoom: 15,
-      minZoom: 14,
-      maxBounds: bounds,
-      maxBoundsViscosity: 1.0,
-      zoomControl: false,
-      scrollWheelZoom: false // Keep scrolling smooth on the page
-    });
-    
-    L.control.zoom({ position: 'topleft' }).addTo(map);
-
-    L.tileLayer('http://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', {
-      attribution: '&copy; Google Maps',
-      maxZoom: 21
-    }).addTo(map);
-
-    // Mask outside MKC to focus on the city (dark overlay for satellite view)
-    L.polygon([
-      [[-90, -180], [90, -180], [90, 180], [-90, 180]],
-      [[11.455, 75.985], [11.490, 75.985], [11.490, 76.025], [11.455, 76.025]]
-    ], { color: '#f59e0b', fillColor: '#000', fillOpacity: 0.6, stroke: true, weight: 2 }).addTo(map);
-
-    // Filtered list of places to fit without sidebar
-    const places = [
-      { name: "Markaz Law College", lat: 11.4730486, lng: 76.0064197, icon: "🎓", color: "#4f46e5" },
-      { name: "Wiras", lat: 11.4712337, lng: 76.0077119, icon: "🎓", color: "#4f46e5" },
-      { name: "Alif Global School", lat: 11.4717407, lng: 76.00654, icon: "🎓", color: "#4f46e5" },
-      { name: "AIMER Business School", lat: 11.4731151, lng: 76.0087921, icon: "🎓", color: "#4f46e5" },
-      { name: "Unani Medical College", lat: 11.473779, lng: 76.0096527, icon: "🎓", color: "#4f46e5" },
-      { name: "MIHRAS Hospital", lat: 11.474457, lng: 76.00675, icon: "🏥", color: "#e11d48" },
-      { name: "Tigris Valley", lat: 11.4706136, lng: 76.0089765, icon: "🏥", color: "#e11d48" },
-      { name: "Jami'ul Futhuh", lat: 11.4723322, lng: 76.0075171, icon: "🕌", color: "#16a34a" },
-      { name: "FEZINN Hotel", lat: 11.4748181, lng: 76.004576, icon: "🏨", color: "#ea580c" },
-      { name: "Valencia Galleria", lat: 11.4749446, lng: 76.0051305, icon: "🏨", color: "#ea580c" },
-      { name: "Evening park cafe", lat: 11.474274, lng: 76.0071788, icon: "☕", color: "#ea580c" },
-      { name: "Landmark Village", lat: 11.4699512, lng: 76.0060351, icon: "🏡", color: "#d97706" },
-      { name: "Gate Way of MKC", lat: 11.4740621, lng: 76.0031501, icon: "📍", color: "#0891b2" }
-    ];
-
-    let userLocation = null;
-    let userMarker = null;
-    
-    let routingControl = L.Routing.control({
-      waypoints: [], routeWhileDragging: false, addWaypoints: false, showAlternatives: false, fitSelectedRoutes: true,
-      lineOptions: { styles: [{ color: '#6e1116', opacity: 0.8, weight: 5 }] },
-      createMarker: function() { return null; } // Custom markers used instead
-    }).addTo(map);
-
-    places.forEach((place) => {
-      const customIcon = L.divIcon({
-        className: 'custom-icon-wrapper',
-        html: `<div class="custom-marker" style="border-color: ${place.color}; color: ${place.color};">${place.icon}</div>`,
-        iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -16]
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
       });
-
-      const marker = L.marker([place.lat, place.lng], { icon: customIcon }).addTo(map);
-      marker.bindPopup(`<div style="text-align:center;font-weight:600;color:${place.color};font-family:'Poppins',sans-serif;font-size:0.9rem">${place.name}</div>`);
-      
-      marker.on('click', () => {
-        if(userLocation) {
-          routingControl.setWaypoints([
-            L.latLng(userLocation[0], userLocation[1]),
-            L.latLng(place.lat, place.lng)
-          ]);
-        }
-      });
-    });
-
-    document.getElementById('btn-location').addEventListener('click', () => {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(position => {
-          let lat = position.coords.latitude;
-          let lng = position.coords.longitude;
-          
-          if(!bounds.contains([lat, lng])) {
-             lat = 11.4740621; lng = 76.0031501; // Gateway fallback
-             alert("Notice: You are outside the bounds of Knowledge City. Simulating location at MKC Gate Way for routing.");
-          }
-
-          userLocation = [lat, lng];
-
-          if(userMarker) {
-             userMarker.setLatLng(userLocation);
-          } else {
-             const userIcon = L.divIcon({ className: '', html: '<div class="user-marker"></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
-             userMarker = L.marker(userLocation, { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
-          }
-          
-          map.flyTo(userLocation, 17);
-          alert("Location found! Now click any icon on the map to draw a route to it.");
-        }, err => { alert("Location access denied or unavailable."); });
-      } else { alert("Geolocation not supported."); }
-    });
+    }
   </script>
-
 </body>
 </html>

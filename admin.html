@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Admin Dashboard — Markaz Knowledge City</title>
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+
+  <style>
+    body { overflow-x: hidden; }
+    /* Override max-width from main CSS for admin */
+    #app { max-width: none; }
+
+    .admin-login { display: flex; }
+    #admin-shell { display: none; }
+
+    #login-error {
+      color: #ef4444;
+      font-size: 13px;
+      margin-top: 8px;
+      min-height: 18px;
+      text-align: center;
+    }
+
+    .demo-hint {
+      margin-top: 16px;
+      padding: 10px 14px;
+      background: rgba(212, 148, 10, 0.15);
+      border: 1px solid rgba(212, 148, 10, 0.3);
+      border-radius: 8px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.8);
+      text-align: center;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body class="admin-body">
+
+  <!-- Login Screen -->
+  <div class="admin-login" id="admin-login">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="assets/logo/markaz_logo.png" alt="Markaz" onerror="this.style.display='none'" />
+        <h1>Admin Dashboard</h1>
+        <p>Markaz Knowledge City</p>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email</label>
+          <input class="form-input" id="login-email" type="email" placeholder="admin@markaz.edu" autocomplete="email" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password</label>
+          <input class="form-input" id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+        <div id="login-error"></div>
+        <button type="submit" class="btn btn-gold btn-full mt-12" id="login-btn">Sign In</button>
+      </form>
+
+      <div class="demo-hint">
+        <strong>Demo Mode:</strong> Use <code>admin@markaz.edu</code> / <code>admin123</code>
+      </div>
+
+      <p style="text-align:center;margin-top:16px;">
+        <a href="index.html" style="color:rgba(255,255,255,0.6);font-size:12px;">← Back to Visitor App</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Admin Shell -->
+  <div class="admin-shell" id="admin-shell">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="sidebar-logo">
+        <img src="assets/logo/markaz_logo.png" alt="Markaz" onerror="this.style.display='none'" />
+        <div class="title">Markaz KC Admin</div>
+        <div class="role">Smart Visitor Platform</div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="sidebar-item active" data-section="overview">
+          <span class="icon">📊</span> Analytics
+        </button>
+        <button class="sidebar-item" data-section="posters">
+          <span class="icon">🖼️</span> Poster Manager
+        </button>
+        <button class="sidebar-item" data-section="story">
+          <span class="icon">✨</span> Story Templates
+        </button>
+        <button class="sidebar-item" data-section="map">
+          <span class="icon">🗺️</span> Map Locations
+        </button>
+        <button class="sidebar-item" data-section="qr">
+          <span class="icon">📱</span> QR Generator
+        </button>
+        <button class="sidebar-item" data-section="settings">
+          <span class="icon">⚙️</span> Settings
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="sidebar-item" id="logout-btn" style="color:var(--text-muted);">
+          <span class="icon">🚪</span> Sign Out
+        </button>
+        <a href="index.html" class="sidebar-item" style="text-decoration:none;">
+          <span class="icon">👁️</span> View Visitor App
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+      <!-- Topbar -->
+      <div class="admin-topbar">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <!-- Mobile menu toggle -->
+          <button class="btn-icon" id="mobile-menu-btn" style="display:none;" onclick="document.getElementById('admin-sidebar').classList.toggle('open')">☰</button>
+          <h1 class="admin-page-title" id="admin-page-title">📊 Analytics Overview</h1>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="btn-icon" id="theme-toggle" title="Toggle Dark Mode">🌙</button>
+          <span style="font-size:12px;color:var(--text-muted);">
+            🟢 Demo Mode
+          </span>
+        </div>
+      </div>
+
+      <!-- Dynamic Content Area -->
+      <div class="admin-content" id="admin-content">
+        <div style="display:flex;align-items:center;justify-content:center;height:200px;">
+          <div class="spinner spinner-green" style="width:40px;height:40px;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Shared modules -->
+  <script src="js/analytics.js"></script>
+  <script src="js/qr-router.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/admin.js"></script>
+
+  <script>
+    // Admin-specific app shortcuts
+    window.addEventListener('DOMContentLoaded', () => {
+      // Theme toggle
+      const savedTheme = localStorage.getItem('mkc_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      const themeBtn = document.getElementById('theme-toggle');
+      if (themeBtn) themeBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+      themeBtn?.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('mkc_theme', next);
+        themeBtn.textContent = next === 'dark' ? '☀️' : '🌙';
+      });
+
+      // Mobile sidebar
+      if (window.innerWidth < 768) {
+        document.getElementById('mobile-menu-btn').style.display = 'flex';
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+{
+  "name": "Markaz Knowledge City — Smart Visitor Guide",
+  "short_name": "Markaz KC",
+  "description": "Smart QR-based visitor guide for Markaz Knowledge City, Calicut, Kerala",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0a2416",
+  "theme_color": "#1e5e38",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Campus Map",
+      "short_name": "Map",
+      "url": "/index.html?tab=map",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Download Posters",
+      "short_name": "Posters",
+      "url": "/index.html?tab=posters",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Rate Your Visit",
+      "short_name": "Review",
+      "url": "/index.html?tab=review",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["navigation", "education", "travel"]
+}
