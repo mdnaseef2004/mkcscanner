@@ -9,6 +9,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" href="https://markazknowledgecity.com/favicon.ico" />
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
   <style>
     /* ===== Reset & Base ===== */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -271,6 +274,43 @@
       .card { padding: 56px 20px 28px; }
       .profile-name { font-size: 1.2rem; }
     }
+
+    /* ===== Embedded Map ===== */
+    .map-wrapper {
+      width: 100%;
+      height: 380px;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      position: relative;
+      animation: fadeUp 0.8s ease 2.7s forwards;
+      opacity: 0;
+    }
+    #map { width: 100%; height: 100%; z-index: 1; }
+    
+    .custom-marker {
+      width: 32px; height: 32px; border-radius: 50%; background: white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; border: 2px solid; cursor: pointer; transition: 0.2s;
+    }
+    .custom-marker:hover { transform: scale(1.15) translateY(-4px); z-index: 1000 !important; }
+    
+    .user-marker {
+      width: 18px; height: 18px; background: #3b82f6; border-radius: 50%;
+      border: 3px solid white; box-shadow: 0 0 0 rgba(59, 130, 246, 0.4); animation: pulse-blue 2s infinite;
+    }
+    @keyframes pulse-blue { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 12px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
+
+    .btn-location {
+      position: absolute; bottom: 16px; right: 16px; z-index: 1000;
+      width: 44px; height: 44px; background: white; border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.2s;
+    }
+    .btn-location:hover { background: #f0f0f0; transform: scale(1.05); }
+
+    .leaflet-routing-container { display: none !important; } /* Hide the default routing text box */
   </style>
 </head>
 <body>
@@ -304,6 +344,12 @@
       <div class="profile-info">
         <h1 class="profile-name">Markaz Knowledge City</h1>
         <p class="profile-location">Calicut, Kerala, India</p>
+      </div>
+
+      <!-- MAP SECTION -->
+      <div class="map-wrapper">
+        <div id="map"></div>
+        <button class="btn-location" id="btn-location" title="You Are Here">📍</button>
       </div>
 
       <div class="divider"></div>
@@ -400,6 +446,110 @@
       &copy; 2025 Markaz Knowledge City. All rights reserved.
     </div>
   </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+  <script>
+    const mkcCenter = [11.47227, 76.00752];
+    const southWest = L.latLng(11.455, 75.985);
+    const northEast = L.latLng(11.490, 76.025);
+    const bounds = L.latLngBounds(southWest, northEast);
+
+    const map = L.map('map', {
+      center: mkcCenter,
+      zoom: 15,
+      minZoom: 14,
+      maxBounds: bounds,
+      maxBoundsViscosity: 1.0,
+      zoomControl: false,
+      scrollWheelZoom: false // Keep scrolling smooth on the page
+    });
+    
+    L.control.zoom({ position: 'topleft' }).addTo(map);
+
+    L.tileLayer('http://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', {
+      attribution: '&copy; Google Maps',
+      maxZoom: 21
+    }).addTo(map);
+
+    // Mask outside MKC to focus on the city (dark overlay for satellite view)
+    L.polygon([
+      [[-90, -180], [90, -180], [90, 180], [-90, 180]],
+      [[11.455, 75.985], [11.490, 75.985], [11.490, 76.025], [11.455, 76.025]]
+    ], { color: '#f59e0b', fillColor: '#000', fillOpacity: 0.6, stroke: true, weight: 2 }).addTo(map);
+
+    // Filtered list of places to fit without sidebar
+    const places = [
+      { name: "Markaz Law College", lat: 11.4730486, lng: 76.0064197, icon: "🎓", color: "#4f46e5" },
+      { name: "Wiras", lat: 11.4712337, lng: 76.0077119, icon: "🎓", color: "#4f46e5" },
+      { name: "Alif Global School", lat: 11.4717407, lng: 76.00654, icon: "🎓", color: "#4f46e5" },
+      { name: "AIMER Business School", lat: 11.4731151, lng: 76.0087921, icon: "🎓", color: "#4f46e5" },
+      { name: "Unani Medical College", lat: 11.473779, lng: 76.0096527, icon: "🎓", color: "#4f46e5" },
+      { name: "MIHRAS Hospital", lat: 11.474457, lng: 76.00675, icon: "🏥", color: "#e11d48" },
+      { name: "Tigris Valley", lat: 11.4706136, lng: 76.0089765, icon: "🏥", color: "#e11d48" },
+      { name: "Jami'ul Futhuh", lat: 11.4723322, lng: 76.0075171, icon: "🕌", color: "#16a34a" },
+      { name: "FEZINN Hotel", lat: 11.4748181, lng: 76.004576, icon: "🏨", color: "#ea580c" },
+      { name: "Valencia Galleria", lat: 11.4749446, lng: 76.0051305, icon: "🏨", color: "#ea580c" },
+      { name: "Evening park cafe", lat: 11.474274, lng: 76.0071788, icon: "☕", color: "#ea580c" },
+      { name: "Landmark Village", lat: 11.4699512, lng: 76.0060351, icon: "🏡", color: "#d97706" },
+      { name: "Gate Way of MKC", lat: 11.4740621, lng: 76.0031501, icon: "📍", color: "#0891b2" }
+    ];
+
+    let userLocation = null;
+    let userMarker = null;
+    
+    let routingControl = L.Routing.control({
+      waypoints: [], routeWhileDragging: false, addWaypoints: false, showAlternatives: false, fitSelectedRoutes: true,
+      lineOptions: { styles: [{ color: '#6e1116', opacity: 0.8, weight: 5 }] },
+      createMarker: function() { return null; } // Custom markers used instead
+    }).addTo(map);
+
+    places.forEach((place) => {
+      const customIcon = L.divIcon({
+        className: 'custom-icon-wrapper',
+        html: `<div class="custom-marker" style="border-color: ${place.color}; color: ${place.color};">${place.icon}</div>`,
+        iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -16]
+      });
+
+      const marker = L.marker([place.lat, place.lng], { icon: customIcon }).addTo(map);
+      marker.bindPopup(`<div style="text-align:center;font-weight:600;color:${place.color};font-family:'Poppins',sans-serif;font-size:0.9rem">${place.name}</div>`);
+      
+      marker.on('click', () => {
+        if(userLocation) {
+          routingControl.setWaypoints([
+            L.latLng(userLocation[0], userLocation[1]),
+            L.latLng(place.lat, place.lng)
+          ]);
+        }
+      });
+    });
+
+    document.getElementById('btn-location').addEventListener('click', () => {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(position => {
+          let lat = position.coords.latitude;
+          let lng = position.coords.longitude;
+          
+          if(!bounds.contains([lat, lng])) {
+             lat = 11.4740621; lng = 76.0031501; // Gateway fallback
+             alert("Notice: You are outside the bounds of Knowledge City. Simulating location at MKC Gate Way for routing.");
+          }
+
+          userLocation = [lat, lng];
+
+          if(userMarker) {
+             userMarker.setLatLng(userLocation);
+          } else {
+             const userIcon = L.divIcon({ className: '', html: '<div class="user-marker"></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
+             userMarker = L.marker(userLocation, { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
+          }
+          
+          map.flyTo(userLocation, 17);
+          alert("Location found! Now click any icon on the map to draw a route to it.");
+        }, err => { alert("Location access denied or unavailable."); });
+      } else { alert("Geolocation not supported."); }
+    });
+  </script>
 
 </body>
 </html>
